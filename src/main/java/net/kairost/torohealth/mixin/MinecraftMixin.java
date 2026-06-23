@@ -21,7 +21,7 @@ public class MinecraftMixin {
 
 
     @Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;pick(F)V", shift = At.Shift.AFTER))
-    private void torohealth$preRenderWorld(boolean advancedGameTime, CallbackInfo info) {
+    private void torohealth$preRenderWorld(boolean advanceGameTime, CallbackInfo info) {
         if (ToroHealth.getConfig().enabled) {
             float tickDelta = deltaTracker.getGameTimeDeltaPartialTick(true);
             LivingEntity entity = RayTrace.getEntityInCrosshair(tickDelta, Math.max(ToroHealth.getConfig().hudOptions.hudDistance, ToroHealth.getConfig().inWorldBarOptions.inWorldBarDistance));

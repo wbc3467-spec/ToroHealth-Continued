@@ -29,12 +29,14 @@ public class InWorldBarRenderer {
     private static final int BAR_WIDTH = 40;
     private static final Identifier IN_WORLD_BAR = Identifier.fromNamespaceAndPath(ToroHealth.MODID, "in_world_bar");
     private static final TextureAtlasSprite sprite = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.PARTICLES).getSprite(IN_WORLD_BAR);
-    private static final TextureSubmittable submittable = new TextureSubmittable();
+    private static final TextureRenderState submittable = new TextureRenderState();
 
     public static void render(Entity entity, Camera camera, float tickDelta, int light, EntityRenderDispatcher entityRenderManager) {
         if (!shouldRender(entity, entityRenderManager)) {
             return;
         }
+
+
 
         Vec3 cameraPos = camera.position();
         EntityRenderState entityRenderState = entityRenderManager.extractEntity(entity, tickDelta);
@@ -86,7 +88,7 @@ public class InWorldBarRenderer {
         float v1 = sprite.getV0();
         float v2 = sprite.getV1();
 
-        submittable.render(SingleQuadParticle.Layer.TRANSLUCENT, x, y, z, (float) width, 5f, rotation.x, rotation.y, rotation.z, rotation.w, SIZE, u1, u2, v1, v2, color, light);
+        submittable.add(SingleQuadParticle.Layer.TRANSLUCENT, x, y, z, (float) width, 5f, rotation.x, rotation.y, rotation.z, rotation.w, SIZE, u1, u2, v1, v2, color, light);
     }
 
 
@@ -112,7 +114,7 @@ public class InWorldBarRenderer {
         return EntityUtil.showHealthBar(entity, Minecraft.getInstance().player);
     }
 
-    public static TextureSubmittable getSubmittable() {
+    public static TextureRenderState getSubmittable() {
         return submittable;
     }
 }

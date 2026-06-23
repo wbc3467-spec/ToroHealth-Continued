@@ -3,44 +3,30 @@ package net.kairost.torohealth.client.render;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import org.joml.Matrix4f;
+
+import net.kairost.torohealth.ToroHealth;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.systems.RenderPass;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.feature.ParticleFeatureRenderer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.client.renderer.state.level.ParticleGroupRenderState;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import org.jetbrains.annotations.Nullable;
-
 
 
 //modified on BillboardParticleSubmittable
-public class TextureSubmittable implements SubmitNodeCollector.ParticleGroupRenderer, ParticleGroupRenderState {
+public class TextureRenderState extends QuadParticleRenderState implements ParticleGroupRenderState {
     private static final int INITIAL_BUFFER_MAX_LENGTH = 1024;
     private static final int BUFFER_FLOAT_FIELDS = 14;
     private static final int BUFFER_INT_FIELDS = 2;
-    private final Map<SingleQuadParticle.Layer, TextureSubmittable.Vertices> bufferByType = new HashMap();
-    private int textures;
+    private final Map<SingleQuadParticle.Layer, TextureRenderState.Storage> particles = new HashMap();
+    private int particleCount;
 
-    public void render(
-        SingleQuadParticle.Layer renderType,
+    public void add(
+        SingleQuadParticle.Layer layer,
         float x,
         float y,
         float z,
@@ -58,89 +44,30 @@ public class TextureSubmittable implements SubmitNodeCollector.ParticleGroupRend
         int color,
         int brightness
     ) {
-        this.bufferByType.computeIfAbsent(renderType, renderTypex -> new Vertices())
-            .vertex(x, y, z, width, height, rotationX, rotationY, rotationZ, rotationW, size, minU, maxU, minV, maxV, color, brightness);
-        this.textures++;
+        this.particles.computeIfAbsent(layer, ignored -> new TextureRenderState.Storage()).add(x, y, z, width, height, rotationX, rotationY, rotationZ, rotationW, size, minU, maxU, minV, maxV, color, brightness);
+        this.particleCount++;
     }
 
     @Override
     public void clear() {
-        this.bufferByType.values().forEach(TextureSubmittable.Vertices::reset);
-        this.textures = 0;
+        this.particles.values().forEach(Storage::clear);
+        this.particleCount = 0;
     }
 
-    @Override
     public boolean isEmpty() {
-        return this.textures == 0;
+        return this.particleCount == 0;
     }
 
-    @Nullable
-    @Override
-    public QuadParticleRenderState.PreparedBuffers prepare(ParticleFeatureRenderer.ParticleBufferCache cache, boolean translucent) {
-        int i = this.textures * 4;
-
-        Object var13;
-        try (ByteBufferBuilder bufferAllocator = ByteBufferBuilder.exactlySized(i * DefaultVertexFormat.PARTICLE.getVertexSize())) {
-            BufferBuilder bufferBuilder = new BufferBuilder(bufferAllocator, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-            Map<SingleQuadParticle.Layer, QuadParticleRenderState.PreparedLayer> map = new HashMap();
-            int j = 0;
-
-            for (Entry<SingleQuadParticle.Layer, TextureSubmittable.Vertices> entry : this.bufferByType.entrySet()) {
-                entry.getValue()
-                    .render(
-                        (x, y, z, width, height, rotationX, rotationY, rotationZ, rotationW,size, minU, maxU, minV, maxV, color, brightness) -> this.drawFace(
-                            bufferBuilder, x, y, z, width, height, rotationX, rotationY, rotationZ, rotationW, size, minU, maxU, minV, maxV, color, brightness
-                        )
-                    );
-                if (entry.getValue().nextVertexIndex() > 0) {
-                    map.put(
-                        entry.getKey(),
-                        new QuadParticleRenderState.PreparedLayer(j, entry.getValue().nextVertexIndex() * 6)
-                    );
-                }
-
-                j += entry.getValue().nextVertexIndex() * 4;
-            }
-
-            MeshData builtBuffer = bufferBuilder.build();
-            if (builtBuffer != null) {
-                cache.write(builtBuffer.vertexBuffer());
-                RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS).getBuffer(builtBuffer.drawState().indexCount());
-                GpuBufferSlice gpuBufferSlice = RenderSystem.getDynamicUniforms()
-                    .writeTransform(RenderSystem.getModelViewMatrix(), new Vector4f(1.0F, 1.0F, 1.0F, 1.0F), new Vector3f(), new Matrix4f());
-                return new QuadParticleRenderState.PreparedBuffers(builtBuffer.drawState().indexCount(), gpuBufferSlice, map);
-            }
-
-            var13 = null;
-        }
-
-        return (QuadParticleRenderState.PreparedBuffers)var13;
-    }
-
-
-    @Override
-    public void render(
-        final QuadParticleRenderState.PreparedBuffers buffers,
-        final ParticleFeatureRenderer.ParticleBufferCache cache,
-        final RenderPass renderPass,
-        final TextureManager manager
-    ) {
-        RenderSystem.AutoStorageIndexBuffer shapeIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-        renderPass.setVertexBuffer(0, cache.get());
-        renderPass.setIndexBuffer(shapeIndexBuffer.getBuffer(buffers.indexCount()), shapeIndexBuffer.type());
-        renderPass.setUniform("DynamicTransforms", buffers.dynamicTransforms());
-
-        for (Entry<SingleQuadParticle.Layer, QuadParticleRenderState.PreparedLayer> entry : buffers.layers().entrySet()) {
-            renderPass.setPipeline(entry.getKey().pipeline());
-            AbstractTexture abstractTexture = manager.getTexture(entry.getKey().textureAtlasLocation());
-            renderPass.bindTexture("Sampler0", abstractTexture.getTextureView(), abstractTexture.getSampler());
-            renderPass.drawIndexed(
-                entry.getValue().vertexOffset(), 0, entry.getValue().indexCount(), 1
-            );
+    public void buildLayer(final SingleQuadParticle.Layer layer, final VertexConsumer bufferBuilder) {
+        TextureRenderState.Storage storage = (TextureRenderState.Storage)this.particles.get(layer);
+        ToroHealth.LOGGER.info("rendering texture");
+        if (storage != null) {
+            storage.forEachParticle((x, y, z, width, height, xRot, yRot, zRot, wRot, scale, u0, u1, v0, v1, color, lightCoords) -> this.renderRotatedTexture(bufferBuilder, x, y, z, width, height, xRot, yRot, zRot, wRot, scale, u0, u1, v0, v1, color, lightCoords));
+            ToroHealth.LOGGER.info("rendering texture");
         }
     }
 
-    protected void drawFace(
+    protected void renderRotatedTexture(
         VertexConsumer vertexConsumer,
         float x,
         float y,
@@ -185,9 +112,9 @@ public class TextureSubmittable implements SubmitNodeCollector.ParticleGroupRend
     }
 
     @Override
-    public void submit(SubmitNodeCollector orderedRenderCommandQueue, CameraRenderState cameraRenderState) {
-        if (this.textures > 0) {
-            orderedRenderCommandQueue.submitParticleGroup(this);
+    public void submit(SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        if (this.particleCount > 0) {
+            submitNodeCollector.submitQuadParticleGroup(this);
         }
     }
 
@@ -216,13 +143,16 @@ public class TextureSubmittable implements SubmitNodeCollector.ParticleGroupRend
     }
 
     @Environment(EnvType.CLIENT)
-    static class Vertices {
+    private static class Storage {
         private int maxVertices = INITIAL_BUFFER_MAX_LENGTH;
         private float[] floatData = new float[BUFFER_FLOAT_FIELDS * INITIAL_BUFFER_MAX_LENGTH];
         private int[] intData = new int[BUFFER_INT_FIELDS * INITIAL_BUFFER_MAX_LENGTH];
         private int nextVertexIndex;
 
-        public void vertex(
+        private Storage() {
+        }
+
+        public void add(
             float x,
             float y,
             float z,
@@ -241,7 +171,7 @@ public class TextureSubmittable implements SubmitNodeCollector.ParticleGroupRend
             int brightness
         ) {
             if (this.nextVertexIndex >= this.maxVertices) {
-                this.increaseCapacity();
+                this.grow();
             }
 
             int i = this.nextVertexIndex * BUFFER_FLOAT_FIELDS;
@@ -265,7 +195,7 @@ public class TextureSubmittable implements SubmitNodeCollector.ParticleGroupRend
             this.nextVertexIndex++;
         }
 
-        public void render(TextureSubmittable.Consumer vertexConsumer) {
+        public void forEachParticle(TextureRenderState.Consumer vertexConsumer) {
             for (int i = 0; i < this.nextVertexIndex; i++) {
                 int j = i * BUFFER_FLOAT_FIELDS;
                 int k = i * BUFFER_INT_FIELDS;
@@ -290,17 +220,17 @@ public class TextureSubmittable implements SubmitNodeCollector.ParticleGroupRend
             }
         }
 
-        public void reset() {
+        public void clear() {
             this.nextVertexIndex = 0;
         }
 
-        private void increaseCapacity() {
+        private void grow() {
             this.maxVertices *= 2;
             this.floatData = Arrays.copyOf(this.floatData, this.maxVertices * BUFFER_FLOAT_FIELDS);
             this.intData = Arrays.copyOf(this.intData, this.maxVertices * BUFFER_INT_FIELDS);
         }
 
-        public int nextVertexIndex() {
+        public int count() {
             return this.nextVertexIndex;
         }
     }
