@@ -14,7 +14,6 @@ import net.minecraft.world.entity.animal.parrot.Parrot;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.monster.Phantom;
@@ -51,11 +50,8 @@ public class EntityUtil {
     }
 
     public static boolean isDetectable(Entity entity, Player player) {
-        return (!entity.isInvisibleTo(player)
-            || entity.isCurrentlyGlowing()
-            || entity.isOnFire()
-            || (entity instanceof Creeper && ((Creeper) entity).isPowered()) // charged creeper
-            || (entity instanceof LivingEntity && (((LivingEntity) entity).getArmorCoverPercentage() > 0)))
+        return !entity.isInvisible()
+            && !entity.isInvisibleTo(player)
             && !entity.isSpectator();
     }
 

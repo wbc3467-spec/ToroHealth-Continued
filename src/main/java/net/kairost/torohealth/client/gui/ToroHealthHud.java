@@ -73,6 +73,9 @@ public class ToroHealthHud {
         if (entity.isRemoved()) {
             return;
         }
+        if (client.player == null || !EntityUtil.showHealthBar(entity, client.player)) {
+            return;
+        }
         if (ToroHealth.getConfig().hudOptions.onlyWhenHurt && entity.getHealth() >= entity.getMaxHealth()) {
             return;
         }

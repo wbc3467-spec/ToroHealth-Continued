@@ -11,8 +11,11 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.particle.v1.FabricParticleTypes;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleProviderRegistry;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import org.jetbrains.annotations.Nullable;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigHolder;
@@ -21,6 +24,7 @@ import net.kairost.torohealth.client.gui.ToroHealthHud;
 import net.kairost.torohealth.client.particle.HealthChangeParticle;
 import net.kairost.torohealth.client.particle.TextParticleRenderer;
 import net.kairost.torohealth.client.util.HoldingWeaponUpdater;
+import net.kairost.torohealth.network.ModPresencePayload;
 
 public class ToroHealth implements ClientModInitializer {
     public static final String MODID = "torohealth";
@@ -49,6 +53,13 @@ public class ToroHealth implements ClientModInitializer {
         });
 
         config = ModConfig.INSTANCE;
+
+        PayloadTypeRegistry.serverboundPlay().register(ModPresencePayload.TYPE, ModPresencePayload.CODEC);
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            if (ClientPlayNetworking.canSend(ModPresencePayload.TYPE)) {
+                sender.sendPacket(ModPresencePayload.INSTANCE);
+            }
+        });
 
         //toroHealth Particle
         Registry.register(
