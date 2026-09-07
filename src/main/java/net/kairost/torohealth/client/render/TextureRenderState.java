@@ -1,10 +1,10 @@
 package net.kairost.torohealth.client.render;
 
 import java.util.Arrays;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.kairost.torohealth.ToroHealth;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -58,12 +58,15 @@ public class TextureRenderState extends QuadParticleRenderState implements Parti
         return this.particleCount == 0;
     }
 
+    @Override
+    public Set<SingleQuadParticle.Layer> layers() {
+        return this.particles.keySet();
+    }
+
     public void buildLayer(final SingleQuadParticle.Layer layer, final VertexConsumer bufferBuilder) {
         TextureRenderState.Storage storage = (TextureRenderState.Storage)this.particles.get(layer);
-        ToroHealth.LOGGER.info("rendering texture");
         if (storage != null) {
             storage.forEachParticle((x, y, z, width, height, xRot, yRot, zRot, wRot, scale, u0, u1, v0, v1, color, lightCoords) -> this.renderRotatedTexture(bufferBuilder, x, y, z, width, height, xRot, yRot, zRot, wRot, scale, u0, u1, v0, v1, color, lightCoords));
-            ToroHealth.LOGGER.info("rendering texture");
         }
     }
 

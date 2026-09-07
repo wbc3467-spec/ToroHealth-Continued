@@ -1,8 +1,6 @@
 package net.kairost.torohealth;
 
 import net.minecraft.client.Minecraft;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -23,8 +21,6 @@ import net.kairost.torohealth.client.gui.ToroHealthHud;
 import net.kairost.torohealth.client.particle.HealthChangeParticle;
 import net.kairost.torohealth.client.particle.TextParticleRenderer;
 import net.kairost.torohealth.client.util.HoldingWeaponUpdater;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class ToroHealth implements ClientModInitializer {
@@ -35,12 +31,6 @@ public class ToroHealth implements ClientModInitializer {
     public static TextParticleRenderer textParticleRenderer;
     private static boolean holdingWeapon = false;
     private static LivingEntity targetedEntity;
-    public static final Logger LOGGER = LoggerFactory.getLogger("my_mod");
-
-    static {
-        LOGGER.info("ToroHealth LevelExtractorMixin loaded");
-    }
-
     @Override
     public void onInitializeClient() {
         // set config
