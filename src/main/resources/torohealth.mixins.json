@@ -9,7 +9,8 @@
     "EntityMixin",
     "LevelRendererMixin",
     "accessor.LivingEntityAccessor",
-    "accessor.WitherEntityAccessor"
+    "accessor.WitherEntityAccessor",
+    "LevelExtractorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

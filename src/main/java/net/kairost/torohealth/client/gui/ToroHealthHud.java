@@ -73,6 +73,9 @@ public class ToroHealthHud {
         if (entity.isRemoved()) {
             return;
         }
+        if (client.player == null || !EntityUtil.showHealthBar(entity, client.player)) {
+            return;
+        }
         if (ToroHealthConfig.CONFIG.hudOptions.onlyWhenHurt.get() && entity.getHealth() >= entity.getMaxHealth()) {
             return;
         }
@@ -198,7 +201,7 @@ public class ToroHealthHud {
             this.entityY = (float) FRAME_SIZE / 2 + ENTITY_RENDER_HEIGHT / 2;
         }
         if (this.entity instanceof Ghast) {
-            this.entityY = (float) FRAME_SIZE / 2 + entity.getBbHeight() * entityScale / 4 ;
+            this.entityY = (float) FRAME_SIZE / 2 + entity.getBbHeight() * entityScale * 3 / 8 ;
         }
         else if (this.entity instanceof EnderDragon) {
             this.entityY = (float) FRAME_SIZE / 2 + entity.getBbHeight() * this.entityScale / 4;
