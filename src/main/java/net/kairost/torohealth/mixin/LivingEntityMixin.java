@@ -42,11 +42,11 @@ public abstract class LivingEntityMixin extends EntityMixin implements BarStateA
     }
 
     @Inject(method = "onSyncedDataUpdated(Lnet/minecraft/network/syncher/EntityDataAccessor;)V", at = @At("TAIL"))
-    private void torohealth$onTrackedData(EntityDataAccessor<?> data, CallbackInfo callbackInfo) {
+    private void torohealth$onTrackedData(EntityDataAccessor<?> accessor, CallbackInfo callbackInfo) {
         if (this.toroHealth_Continued_forge$barState == null) {
             return;
         }
-        if (data.equals(LivingEntityAccessor.getHealthData())) {
+        if (accessor.equals(LivingEntityAccessor.getHealthData())) {
             this.toroHealth_Continued_forge$barState.updateHealth(this.getHealth());
             if (this.toroHealth_Continued_forge$barState.health != this.toroHealth_Continued_forge$barState.lastHealth) {
                 this.toroHealth_Continued_forge$barState.handleHealthChange();
