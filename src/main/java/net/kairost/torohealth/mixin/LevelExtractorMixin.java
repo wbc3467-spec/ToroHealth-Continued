@@ -35,7 +35,6 @@ public class LevelExtractorMixin {
     @Shadow
     private LevelRenderState levelRenderState;
 
-    @Final
     @Shadow
     private ClientLevel level;
 
@@ -47,7 +46,7 @@ public class LevelExtractorMixin {
     private void torohealth$render_AddInWorldBarsToBatch(
         DeltaTracker deltaTracker,
         Camera camera,
-        float deltaPaitialTick,
+        float deltaPartialTick,
         CallbackInfo callbackInfo,
         @Local(ordinal = 0) Frustum frustum
     ) {
@@ -57,9 +56,9 @@ public class LevelExtractorMixin {
         double f = vec3d.z();
         EntityRenderDispatcher entityRenderDispatcher = this.levelRenderer.entityRenderDispatcher();
         for (Entity entity : this.level.entitiesForRendering()) {
-            int light = ToroHealthConfig.CONFIG.inWorldBarOptions.inWorldBarLightMode.get().equals(ToroHealthConfig.InWorldBarLightMode.FULL_BRIGHT) ? LightCoordsUtil.FULL_BRIGHT : entityRenderDispatcher.getPackedLightCoords(entity, deltaPaitialTick);
+            int light = ToroHealthConfig.CONFIG.inWorldBarOptions.inWorldBarLightMode.get().equals(ToroHealthConfig.InWorldBarLightMode.FULL_BRIGHT) ? LightCoordsUtil.FULL_BRIGHT : entityRenderDispatcher.getPackedLightCoords(entity, deltaPartialTick);
             if (entityRenderDispatcher.shouldRender(entity, frustum, d, e, f) || entity.hasIndirectPassenger(Objects.requireNonNull(this.minecraft.player))) {
-                InWorldBarRenderer.render(entity, camera, deltaPaitialTick, light, entityRenderDispatcher);
+                InWorldBarRenderer.render(entity, camera, deltaPartialTick, light, entityRenderDispatcher);
             }
         }
         this.levelRenderState.particlesRenderState.add(InWorldBarRenderer.getSubmittable());
